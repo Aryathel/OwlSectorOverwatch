@@ -1,8 +1,12 @@
 {
-    "api_token": "",
-    "autostart": true,
+    "access_token": "COTEAhKGAgAgSwaZ0x4bx4+8ld//E6cDSih083OctvvWq7Sp32zSLVngAAAAm2xmFWfDk+1lHxohM3RRQ36UvE71ERdu3KzAhjhzI1CZmOY6RhO3N0EH6GcLMLrpxq3pQvCSkpqhyMuqELQW4JRM1lt8aNnnCBqfTw6a3yuW3r2dBcYfWgDHto0r0j6LHTi1eoxtOo+aP5nBeAlllxtmxIGyZe0KQ7E3yhwdIbBDAhP9ID6icb3R5Tk1E2+cYvWr2qWFc4xhZh+n/FvGZVpSLCLes8cE7ueDpLFkH4ijhQGorDzElblG64I9+z7obh7HCGoma9hiujIX3ntdULQGMVVjV4uAwRQSBGN8jwQ=",
+    "autostart": false,
     "file": "./OwlSector/config.json",
     "language": "en",
+    "membership_id": "19548659",
     "platform": "Steam",
+    "refresh_token": null,
+    "state": "6e12e570a2834d3c90b92835d746cb50",
+    "token_type": "Bearer",
     "username": ""
 }

@@ -1,5 +1,6 @@
 import json
 import os
+import uuid
 
 import requests
 
@@ -61,7 +62,8 @@ class Loader:
                 "platform": self.data.platforms[0],
                 "username": "",
                 "language": self.data.locales[0],
-                "autostart": False
+                "autostart": False,
+                "state": uuid.uuid4().hex
             },
             f"./{self.data.directory_name}/config.json")
             self.config.save()

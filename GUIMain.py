@@ -1,11 +1,12 @@
 import os
 import sys
+from urllib import parse
+from threading import Thread
 
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWebEngineWidgets import *
-import sys
 
 from infi.systray import SysTrayIcon
 import requests
@@ -13,7 +14,7 @@ import requests
 from Data.Config import Loader
 
 class GUIMain(QMainWindow):
-    def __init__(self, loader):
+    def __init__(self, loader, main):
         self._loader = loader
         self.data = self._loader.data
         self.config = self._loader.config
@@ -22,6 +23,8 @@ class GUIMain(QMainWindow):
 
         self.name = self.data.window_name
 
+        self.main = main
+
         self.load_icon()
 
         super().__init__()
@@ -29,13 +32,15 @@ class GUIMain(QMainWindow):
         self.statusbar = self.statusBar()
         self.menubar = self.menuBar()
         self.browser = QWebEngineView()
-        self.widget = QWidget(self)
-        self.setCentralWidget(self.widget)
+        self.main_widget = QWidget()
+        self.main_widget.setLayout(QVBoxLayout())
+        self.setCentralWidget(self.main_widget)
 
         self.setWindowIcon(QIcon(self.icon))
         self.setWindowTitle(self.name)
 
-        self.setGeometry(300, 300, 600, 200)
+        self.setGeometry(300, 300, 300, 100)
+        self.setFixedSize(300, 100)
 
         self.load_menubar()
         self.load_widget_panels()
@@ -44,23 +49,22 @@ class GUIMain(QMainWindow):
 
         self.show()
 
-        self.statusbar.showMessage("Ready")
-
-        if self.config.autostart:
-            self.start_overwatch()
-
-    def tray(self):
-        tray = (("Open Window", None, self.open_window), ("Start", None, self.start_overwatch), ("Stop", None, self.stop_overwatch))
-        self.systray = SysTrayIcon(self.icon, self.name, tray, on_quit=self.quit_program)
-        self.systray.start()
-
-    def open_window(self, e=None):
-        pass
+        if self.config.access_token in [None, '']:
+            self.toggle_browser(True)
+            self.browser_toggle.setChecked(True)
+        else:
+            self.toggle_browser(False)
+            if self.config.autostart:
+                self.start_overwatch()
 
     def start_overwatch(self):
         self.overwatch_toggle.setText("Stop Overwatch")
         self.overwatch_toggle.setChecked(True)
-        print("Start Overwatch")
+        print("Starting Overwatch")
+
+        self.thread = Thread(target=self.main.start_overwatch, args = (self,))
+        self.thread.daemon = True
+        self.thread.start()
 
     def stop_overwatch(self):
         self.overwatch_toggle.setText("Start Overwatch")
@@ -72,12 +76,6 @@ class GUIMain(QMainWindow):
             self.start_overwatch()
         else:
             self.stop_overwatch()
-
-    def quit_program(self):
-        sys.exit(0)
-
-    def vanish(self):
-        pass
 
     def load_icon(self):
         fileName = f"./{self.data.directory_name}/Resources/Owl_Sector.png"
@@ -101,8 +99,14 @@ class GUIMain(QMainWindow):
 
     def toggle_browser(self, state):
         if state:
+            self.setFixedSize(1000, 500)
+            self.platform_menu.hide()
+            self.overwatch_toggle.hide()
             self.browser.show()
         else:
+            self.setFixedSize(300, 100)
+            self.platform_menu.show()
+            self.overwatch_toggle.show()
             self.browser.hide()
 
     def change_dark_theme(self):
@@ -114,6 +118,46 @@ class GUIMain(QMainWindow):
     def update_platform(self, platform):
         self.config.platform = platform
         self.config.save()
+
+    def on_browser_load(self):
+        self.browser.page().runJavaScript(
+            "window.location.href", self.get_oauth_token
+        )
+
+    def get_oauth_token(self, loc):
+        if "OwlSectorAuth" in loc:
+            params = {k: v[0] for k, v in parse.parse_qs(parse.urlsplit(loc).query).items()}
+
+            headers = {
+                "Content-Type": "application/x-www-form-urlencoded"
+            }
+
+            data = {
+                "grant_type": "authorization_code",
+                "code": params['code'],
+                "client_id": 34375
+            }
+
+            r = requests.post("https://www.bungie.net/platform/app/oauth/token/", headers = headers, data=data)
+            if r.status_code == 200:
+                data = r.json()
+
+                self.config.access_token = data.get('access_token')
+                self.config.refresh_token = data.get('refresh_token')
+                self.config.token_type = data.get('token_type')
+                self.config.membership_id = data.get('membership_id')
+
+                self.config.save()
+
+                self.toggle_browser(False)
+
+            else:
+                data = {"error": r.status_code, "error_description": f"Token request failed with status code {r.status_code}"}
+
+                error_box = QMessageBox.warning(f"ERROR:  {data['error_description']}.\n\nPlease try again.", QMessageBox.Ok, QMessageBox.Ok)
+
+                if error_box == QMessageBox.Ok:
+                    self.browser.setUrl(QUrl(self.data.oauth_url.format(client_id=self.data.client_id, state=self.config.state)))
 
     def load_menubar(self):
         self.exit = QAction('&Exit', self)
@@ -164,7 +208,10 @@ class GUIMain(QMainWindow):
         self.menu_links.addAction(self.browser_toggle)
 
     def load_widget_panels(self):
-        self.layout = QVBoxLayout()
+        self.overwatch_widgets = QHBoxLayout()
+        self.browser_widgets = QHBoxLayout()
+        self.main_widget.layout().addLayout(self.overwatch_widgets)
+        self.main_widget.layout().addLayout(self.browser_widgets)
 
         self.platform_menu = QComboBox()
         self.platform_menu.addItems(self.data.platforms)
@@ -172,7 +219,8 @@ class GUIMain(QMainWindow):
         if i >= 0:
             self.platform_menu.setCurrentIndex(i)
         self.platform_menu.currentIndexChanged[str].connect(self.update_platform)
-        self.layout.addWidget(self.platform_menu)
+        self.platform_menu.setFixedSize(100, 25)
+        self.overwatch_widgets.addWidget(self.platform_menu)
 
         self.overwatch_toggle = QPushButton()
         self.overwatch_toggle.setCheckable(True)
@@ -182,10 +230,9 @@ class GUIMain(QMainWindow):
         else:
             self.overwatch_toggle.setText("Start Overwatch")
         self.overwatch_toggle.clicked.connect(lambda: self.toggle_overwatch(self.overwatch_toggle))
-        self.layout.addWidget(self.overwatch_toggle)
+        self.overwatch_toggle.setFixedSize(175, 25)
+        self.overwatch_widgets.addWidget(self.overwatch_toggle)
 
         self.browser.setUrl(QUrl(self.data.oauth_url.format(client_id=self.data.client_id, state=self.config.state)))
-        self.layout.addWidget(self.browser)
-        self.browser.hide()
-
-        self.widget.setLayout(self.layout)
+        self.browser.loadFinished.connect(self.on_browser_load)
+        self.browser_widgets.addWidget(self.browser)

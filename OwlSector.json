@@ -2,6 +2,7 @@
   "window_name": "Owl Sector Overwatch",
   "version": "0.0.1",
   "client_id": 34375,
+  "api_key": "f02d903e23cb4aa6a2ebf3eeeb02ba38",
   "icon_url": "https://raw.githubusercontent.com/HeroicosHM/OwlSectorOverwatch/master/Resources/Owl_Sector.png",
   "oauth_url": "https://www.bungie.net/en/oauth/authorize?client_id={client_id}&response_type=code&state={state}",
   "directory_name": "OwlSector",
