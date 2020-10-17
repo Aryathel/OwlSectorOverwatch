@@ -12,9 +12,10 @@ class Data:
         self.directory_name = options.get('directory_name')
         self.platforms = options.get('platforms')
         self.version_url = options.get('version_url')
-        self.locales = options.get("supported_locales")
-        self.client_id = options.get("client_id")
-        self.oauth_url = options.get("oauth_url")
+        self.locales = options.get('supported_locales')
+        self.client_id = options.get('client_id')
+        self.api_key = options.get('api_key')
+        self.oauth_url = options.get('oauth_url')
 
 class Config:
     def __init__(self, options, file):

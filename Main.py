@@ -10,10 +10,13 @@ from PyQt5.QtWidgets import *
 from DestinyManifestManager import Manifest
 import requests
 from pypresence import Presence
+import datetime
 
 from GUIMain import GUIMain
 from Enums.Platforms import Platforms
 from Enums.Errors import Errors
+from Enums.Images import Images
+from Enums.Orbit import Orbit
 from Data.Config import Loader
 
 BASE_ROUTE = "https://www.bungie.net/Platform"
@@ -25,7 +28,7 @@ class Requests:
     def __init__(self, config, errors):
         self.errors = errors
 
-        self.access_token = config.access_token
+        self.access_token = config.api_key
         self.headers = {"X-API-Key": self.access_token}
 
     def get(self, request):
@@ -58,7 +61,7 @@ class Main:
 
         platform = Platforms(self.config.platform)
 
-        requester = Requests(self.config, Errors())
+        requester = Requests(self.data, Errors())
 
         while True:
             try:
@@ -68,14 +71,33 @@ class Main:
 
                 last_player_char = self.get_last_played_id(platform.platform, self.config.membership_id, requester)
 
+                activity_data = requester.get(ACTIVITY_LOOKUP.format(platform.platform, self.config.membership_id, last_played_char))
+                activity_hash = activity_data["Response"]["activities"]["data"]["currentActivityHash"]
+                activity_decoded = self.manifest.decode_hash(activity_hash, "DestinyActivityDefinition", self.language)
+                activity_decoded_en = self.manifest.decode_hash(activity_hash, "DestinyActivityDefinition", "en")
+
+                mode_hash = activity_data["Response"]["activities"]["data"]["currentActivityHash"]
+                mode_data = self.manifest.decode_hash(activity_hash, "DestinyActivityDefinition", "en")
+
+                orbit_translation = Orbit(self.language).orbit_text
+                details, state = orbit_translation, orbit_translation
+                picture, timer = "in_orbit", time.time()
+
+                if mode_date != None:
+                    print(mode_data)
+
                 time.sleep(30)
 
                 self.run = False
             except Exception as e:
                 print(traceback.format_exc())
+                return
 
     def get_last_played_id(self, type, id, requester):
         character_data = requests.get(CHARACTER_LOOKUP.format(type, id))
+        print(character_data.text)
+
+        print(character_data)
 
         epoch_table = {}
 
@@ -85,7 +107,7 @@ class Main:
         return epoch_table[max(epoch_character_table.keys())]
 
     def date_to_epoch(self, date):
-        epoch = datetime.datetime.(1970, 1, 1)
+        epoch = datetime.datetime(1970, 1, 1)
         dt = datetime.datetime.strptime(date.replace("T", " ").replace("Z", ""), "%Y-%m-%d %H:%M:%S")
         epoch_diff = (dt - epoch).total_seconds()
         return epoch_diff

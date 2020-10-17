@@ -1,3 +1,4 @@
+from base64 import b64encode
 import os
 import sys
 from urllib import parse
@@ -129,6 +130,7 @@ class GUIMain(QMainWindow):
             params = {k: v[0] for k, v in parse.parse_qs(parse.urlsplit(loc).query).items()}
 
             headers = {
+                "Authorization": "Basic {encoded}".format(encoded = b64encode(f"{self.data.client_id}:{}"))
                 "Content-Type": "application/x-www-form-urlencoded"
             }
 
@@ -154,10 +156,13 @@ class GUIMain(QMainWindow):
             else:
                 data = {"error": r.status_code, "error_description": f"Token request failed with status code {r.status_code}"}
 
-                error_box = QMessageBox.warning(f"ERROR:  {data['error_description']}.\n\nPlease try again.", QMessageBox.Ok, QMessageBox.Ok)
+                error_box = QMessageBox()
+                error_box.setIcon(QMessageBox.Warning)
+                error_box.setText(f"ERROR:  {data['error_description']}.\n\nPlease try again.")
+                error_box.setWindowTitle("Error")
+                error_box.exec_()
 
-                if error_box == QMessageBox.Ok:
-                    self.browser.setUrl(QUrl(self.data.oauth_url.format(client_id=self.data.client_id, state=self.config.state)))
+                # self.browser.setUrl(QUrl(self.data.oauth_url.format(client_id=self.data.client_id, state=self.config.state)))
 
     def load_menubar(self):
         self.exit = QAction('&Exit', self)

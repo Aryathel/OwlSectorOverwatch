@@ -7,7 +7,7 @@ class Platforms:
             "Stadia": 5
         }
 
-        self.platform = self.platforms[platform]
+        self.set_platform(platform)
 
     @property
     def platform_str(self):
