@@ -1,7 +1,9 @@
 {
   "window_name": "Owl Sector Overwatch",
   "version": "0.0.1",
-  "icon_url": "https://raw.githubusercontent.com/HeroicosHM/OwlSectorOverwatch/master/Resources/Owl_Sector.ico",
+  "client_id": 34375,
+  "icon_url": "https://raw.githubusercontent.com/HeroicosHM/OwlSectorOverwatch/master/Resources/Owl_Sector.png",
+  "oauth_url": "https://www.bungie.net/en/oauth/authorize?client_id={client_id}&response_type=code&state={state}",
   "directory_name": "OwlSector",
   "platforms": [
     "Playstation",
