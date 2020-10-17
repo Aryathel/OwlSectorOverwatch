@@ -1,7 +1,28 @@
 {
+  "window_name": "Owl Sector Overwatch",
   "version": "0.0.1",
-  "icon_url": "",
+  "icon_url": "https://raw.githubusercontent.com/HeroicosHM/OwlSectorOverwatch/master/Resources/Owl_Sector.ico",
   "directory_name": "OwlSector",
-  "platforms": ["Playstation", "Stadia", "Steam", "Xbox"],
-  "version_url": ""
+  "platforms": [
+    "Playstation",
+    "Stadia",
+    "Steam",
+    "Xbox"
+  ],
+  "version_url": "",
+  "supported_locales": [
+    "en",
+    "fr",
+    "es",
+    "de",
+    "it",
+    "ja",
+    "pt-br",
+    "es-mx",
+    "ru",
+    "pl",
+    "ko",
+    "zh-cht",
+    "zh-chs"
+  ]
 }
